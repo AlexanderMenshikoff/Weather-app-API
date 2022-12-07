@@ -1,150 +1,180 @@
 const link =
-"http://api.weatherstack.com/current?access_key=73ef639e4b5ebe7bc7ed04e80bb960e3";
+"http://api.weatherapi.com/v1/current.json?key=e65ef7e4e4794414814180138220712";
 
-const root = document.getElementById('root')
-const popup = document.getElementById('popup')
-const textInput = document.getElementById('text-input')
-const form = document.getElementById('form')
+const root = document.getElementById("root");
+const popup = document.getElementById("popup");
+const textInput = document.getElementById("text-input");
+const form = document.getElementById("form");
+const cancel = document.getElementById('close')
+
 
 let store = {
-    city: "New York",
-    feelslike:0,
-    temperature:0,    
-    observationTime:'00:00 AM',
-    isDay:'yes',
-    description:'',  
-    properties:{
-      cloudcover:{},
-      humidity:{},
-      windSpeed:{},
-      visibility:{},
-      pressure:{},
-      uvIndex:{},
-    }
-}
+  city: "Minsk",
+  temp_c: 0,
+  localtime: "00:00",
+  is_day: 1,
+  text: "",
+  country:'Russia',
+  region:'Sverdlovsk',
+  properties: {
+    cloud: {},
+    humidity: {},
+    wind_kph: {},
+    pressure_mb: {},
+    uv: {},
+    vis_km: {},
+    feelslike_c:{},
+    wind_dir:{}
+  },
+};
+
 const fetchData = async () => {
-  try{
-    const query = localStorage.getItem('query') || store.city
-    const result = await fetch(`${link}&query=${query}`);
+  try {
+    const query = localStorage.getItem("query") || store.city;
+    const result = await fetch(`${link}&q=${query}`);
     const data = await result.json();
+    console.log(data)
 
-    const { 
-        current:{
-            feelslike,
-            cloudcover,
-            humidity, 
-            temperature,
-            observation_time:observationTime,
-            pressure,
-            uv_index:uvIndex,
-            visibility,
-            is_day: isDay,
-            weather_description:description,
-            wind_speed: windSpeed
-        }, 
-        location:{
-          name
-        }
-} = data
+    const {
+      current: {
+        cloud,
+        temp_c:temperature,
+        humidity,
+        pressure_mb: pressure,
+        uv,
+        vis_km: visibility,
+        is_day: isDay,
+        wind_kph: windSpeed,
+        feelslike_c: feelsLike,
+        wind_dir: windDirection,
 
+      condition:{
+        text:description
+      }
+    },
+      location: { 
+        name, 
+        localtime: time,
+        country,
+        region
+      }
+    } = data;
+
+    
 
     store = {
-        ...store,
-        city:name,
-        //Чтобы не писать два раза:
-        feelslike,
-        temperature,
-        observationTime,      
-        isDay,
-        description:description[0],        
-        properties:{
-          //разбиваем еще, чтобы получить картинку
-          cloudcover: {
-            title: 'cloud cover',
-            value: `${cloudcover}%`,
-            icon: 'cloud.png'
-          },
-          humidity: {
-            title:'humidity',
-            value: `${humidity}%`,
-            icon: 'humidity.png'
-          },
-          windSpeed: {
-            title:'wind speed',
-            value: `${windSpeed} km/h`,
-            icon: 'wind.png'
-          },
-          visibility: {
-            title:'visibility',
-            value: `${visibility} km/h`,
-            icon: 'visibility.png'
-          },
-          pressure:{
-            title:'pressure',
-            value: `${pressure} km/h`,
-            icon: 'gauge.png'
-          },
-          uvIndex:{
-            title:'uv index',
-            value: `${uvIndex} / 100`,
-            icon: 'uv-index.png'
-          }
-        }
-        
-    }
+      ...store,
+      isDay,
+      city: name,
+      temperature,
+      time,
+      description,
+      country,
+      region,
+      properties: {
+        cloud: {
+          title: "cloud cover",
+          value: `${cloud}%`,
+          icon: "cloud.png",
+        },
+        humidity: {
+          title: "humidity",
+          value: `${humidity}%`,
+          icon: "humidity.png",
+        },
+        windSpeed: {
+          title: "wind speed",
+          value: `${windSpeed} km/h`,
+          icon: "wind.png",
+        },
+        pressure: {
+          title: "pressure",
+          value: `${pressure} %`,
+          icon: "gauge.png",
+        },
+        uv: {
+          title: "uv Index",
+          value: `${uv} / 100`,
+          icon: "uv-index.png",
+        },
+        visibility: {
+          title: "visibility",
+          value: `${visibility} km`,
+          icon: "visibility.png",
+        },
+        feelsLike: {
+          title: "feels like",
+          value: `${feelsLike} °`,
+          icon: "feels-like.png"
+        },
+        windDirection: {
+          title: "wind direction",
+          value: windDirection,
+          icon: "wind-direction.png"
+        }    
+      },
+    };
 
-    renderComponent()
-  } catch(err) {
-    console.log(err)
+    renderComponent();
+  } catch (err) {
+    console.log(err);
   }
- 
-}
+};
 
-const getImage = (description) =>{
-    if (description === 'Overcast') return ''
-    const value = description.toLowerCase()
-    switch(value){
-      case 'partly cloudy':
-          return 'partly.png';
-      case 'cloud':
-          return 'cloud.png'
-      case 'fog':
-          return 'fog.png'
-      case 'sunny':
-          return 'sunny.png'
-      default:
-          return 'the.png'
-    }
-}
+const getImage = (description) => {
+  const value = description.toLowerCase();
+
+  switch (value) {
+    case "partly cloudy":
+      return "partly.png";
+    case "clear":
+      return "clear.png";
+    case "mist":
+      return "fog.png";
+    case "sunny":
+      return "sunny.png";
+    case "cloud":
+      return "cloud.png";
+    case 'light rain shower':
+      return 'light-rain-shower.png';
+    case 'overcast':
+      return 'overcast.png'
+    case 'light rain':
+      return 'light-rain.png'
+    case 'light drizzle':
+      return 'light-drizzle.png'
+    case 'light snow':
+      return 'light-snow.png'
+    default:
+      return "the.png";
+  }
+};
 
 const renderProperty = (properties) => {
-  return Object.values(properties).map(({title, value, icon}) => {
-   return `<div class="property">
-    <div class="property-icon">
-      <img src="./img/icons/${icon}" alt="">
-    </div>
-    <div class="property-info">
-      <div class="property-info__value">${value}</div>
-      <div class="property-info__description">${title}</div>
-    </div>
-  </div>`;
-  }).join('')
-  
-  }
-  
+  return Object.values(properties)
+    .map(({ title, value, icon }) => {
+      return `<div class="property">
+            <div class="property-icon">
+              <img src="./img/icons/${icon}" alt="">
+            </div>
+            <div class="property-info">
+              <div class="property-info__value">${value}</div>
+              <div class="property-info__description">${title}</div>
+            </div>
+          </div>`;
+    })
+    .join("");
+};
+
 const markup = () => {
-    const{
-        city,
-        description,
-        observationTime,
-        temperature,
-        isDay
+  const { city, description, time, temperature, isDay, properties, country, region } =
+    store;
 
-    } = store
+  const containerClass = isDay === 1 ? "is-day" : "";
+  const bgColor = isDay === 1 ? 'is-day' : '';
 
-    const containerClass = isDay === 'yes' ? 'is-day' : ''
-     
-   return `<div class="container ${containerClass}">
+
+  return `<div class="container ${containerClass}">
             <div class="top">
               <div class="city">
                 <div class="city-subtitle">Weather Today in</div>
@@ -159,43 +189,53 @@ const markup = () => {
               </div>
             
               <div class="top-right">
-                <div class="city-info__subtitle">as of ${observationTime}</div>
+                <div class="city-info__country">${country}</div>
+                <div class="city-info__region">${region}</div>
+                <div class="city-info__subtitle">as of ${time}</div>
                 <div class="city-info__title">${temperature}°</div>
               </div>
             </div>
           </div>
         <div id="properties">${renderProperty(properties)}</div>
       </div>`;
-}
 
-const togglePopupClass = () =>{
-  popup.classList.toggle('active')
-}
+      
+};
+
+
+const togglePopupClass = () => {
+  popup.classList.toggle("active");
+};
 
 const renderComponent = () => {
-    root.innerHTML = markup()
-    const city = document.getElementById('city')
-    city.addEventListener('click', handleClick)
-}
+  root.innerHTML = markup();
+
+  const city = document.getElementById("city");
+  city.addEventListener("click", togglePopupClass);
+};
 
 const handleInput = (e) => {
   store = {
     ...store,
-    city: e.target.value,
-  }
-}
+    city: e.target.value
+  };
+};
 
 const handleSubmit = (e) => {
-  e.preventDefault()
-  const value = store.city
+  e.preventDefault();
+  const value = store.city;
 
-  if(!value) return null
-  localStorage.setItem('query', value)
-  fetchData()
-  togglePopupClass()
-}
+  if (!value) return null;
 
-form.addEventListener('submit', handleSubmit )
-textInput.addEventListener('input', handleInput)
+  localStorage.setItem("query", value);
+  fetchData();
+  togglePopupClass();
+};
 
-fetchData()
+
+form.addEventListener("submit", handleSubmit);
+textInput.addEventListener("input", handleInput);
+cancel.addEventListener('click', togglePopupClass)
+
+
+fetchData();
